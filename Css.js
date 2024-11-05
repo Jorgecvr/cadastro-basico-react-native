@@ -22,6 +22,7 @@ const css = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
     marginVertical: 20,
+    marginTop: 100
   },
   login__input: {
     backgroundColor: "#f1f3f5",
@@ -58,6 +59,7 @@ const css = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
     marginTop: 20,
+    flex: 1
   },
   userBoxTitle: {
     fontSize: 18,
@@ -93,7 +95,35 @@ const css = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 14,
     paddingHorizontal: 10,
-  }
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '90%',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 20,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  cancelButton: {
+    marginTop: 10,
+    paddingVertical: 10,
+  },
+  cancelButtonText: {
+    color: '#dc3545',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
 });
 
 export { css };
+

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Text, View, TextInput, Platform, FlatList } from 'react-native';
-import { KeyboardAvoidingView, TouchableOpacity } from 'react-native';
+import { Text, View, TextInput, Platform, FlatList, Modal, TouchableOpacity } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { css } from './Css';
 
@@ -10,7 +10,8 @@ export default function App() {
   const [age, setAge] = useState('');
   const [address, setAddress] = useState('');
   const [users, setUsers] = useState([]);
-  const [editingUserId, setEditingUserId] = useState(null);
+  const [editingUser, setEditingUser] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -36,18 +37,9 @@ export default function App() {
 
   const handleRegister = () => {
     if (name && age && address) {
-      if (editingUserId) {
-        const updatedUsers = users.map(user =>
-          user.id === editingUserId ? { ...user, name, age, address } : user
-        );
-        setUsers(updatedUsers);
-        saveUsers(updatedUsers);
-        setEditingUserId(null);
-      } else {
-        const newUsers = [...users, { id: Date.now(), name, age, address }];
-        setUsers(newUsers);
-        saveUsers(newUsers);
-      }
+      const newUsers = [...users, { id: Date.now(), name, age, address }];
+      setUsers(newUsers);
+      saveUsers(newUsers);
       setName('');
       setAge('');
       setAddress('');
@@ -61,10 +53,23 @@ export default function App() {
   };
 
   const handleEdit = (user) => {
-    setName(user.name);
-    setAge(user.age);
-    setAddress(user.address);
-    setEditingUserId(user.id);
+    setEditingUser(user);
+    setModalVisible(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (editingUser && (name || age || address)) {
+      const updatedUsers = users.map(user =>
+        user.id === editingUser.id ? { ...user, name, age, address } : user
+      );
+      setUsers(updatedUsers);
+      saveUsers(updatedUsers);
+      setEditingUser(null);
+      setName('');
+      setAge('');
+      setAddress('');
+    }
+    setModalVisible(false);
   };
 
   return (
@@ -93,9 +98,7 @@ export default function App() {
           onChangeText={setAddress}
         />
         <TouchableOpacity style={css.login__button} onPress={handleRegister}>
-          <Text style={css.login__buttonText}>
-            {editingUserId ? 'Salvar Alterações' : 'Cadastrar'}
-          </Text>
+          <Text style={css.login__buttonText}>Cadastrar</Text>
         </TouchableOpacity>
       </View>
 
@@ -123,6 +126,51 @@ export default function App() {
           )}
         />
       </View>
+
+      {/* Modal de Edição */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={css.modalContainer}>
+          <View style={css.modalContent}>
+            <Text style={css.modalTitle}>Editar Usuário</Text>
+            <TextInput
+              style={css.login__input}
+              placeholder="Nome:"
+              value={editingUser ? editingUser.name : ''}
+              onChangeText={(text) => setEditingUser({ ...editingUser, name: text })}
+            />
+            <TextInput
+              style={css.login__input}
+              placeholder="Idade:"
+              value={editingUser ? editingUser.age : ''}
+              onChangeText={(text) => setEditingUser({ ...editingUser, age: text })}
+              keyboardType="numeric"
+            />
+            <TextInput
+              style={css.login__input}
+              placeholder="Endereço:"
+              value={editingUser ? editingUser.address : ''}
+              onChangeText={(text) => setEditingUser({ ...editingUser, address: text })}
+            />
+            <TouchableOpacity
+              style={css.login__button}
+              onPress={handleSaveEdit}
+            >
+              <Text style={css.login__buttonText}>Salvar Alterações</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setModalVisible(false)}
+              style={css.cancelButton}
+            >
+              <Text style={css.cancelButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
