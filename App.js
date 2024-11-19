@@ -13,19 +13,33 @@ export default function App() {
   const [editingUser, setEditingUser] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
 
+  // useEffect(() => {
+  //   const loadUsers = async () => {
+  //     try {
+  //       const savedUsers = await AsyncStorage.getItem('users');
+  //       if (savedUsers) {
+  //         setUsers(JSON.parse(savedUsers));
+  //       }
+  //     } catch (error) {
+  //       console.error('Erro ao carregar usuários:', error);
+  //     }
+  //   };
+  //   loadUsers();
+  // }, []);
+
   useEffect(() => {
     const loadUsers = async () => {
       try {
-        const savedUsers = await AsyncStorage.getItem('users');
-        if (savedUsers) {
-          setUsers(JSON.parse(savedUsers));
-        }
+        const response = await fetch('http://192.168.1.108:3000/users'); // Altere <SEU_IP> para o IP do servidor
+        const data = await response.json();
+        setUsers(data);
       } catch (error) {
         console.error('Erro ao carregar usuários:', error);
       }
     };
     loadUsers();
   }, []);
+  
 
   const saveUsers = async (newUsers) => {
     try {
@@ -35,27 +49,90 @@ export default function App() {
     }
   };
 
-  const handleRegister = () => {
+  // const handleRegister = () => {
+  //   if (name && age && address) {
+  //     const newUsers = [...users, { id: Date.now(), name, age, address }];
+  //     setUsers(newUsers);
+  //     saveUsers(newUsers);
+  //     setName('');
+  //     setAge('');
+  //     setAddress('');
+  //   }
+  // };
+
+  const handleRegister = async () => {
     if (name && age && address) {
-      const newUsers = [...users, { id: Date.now(), name, age, address }];
-      setUsers(newUsers);
-      saveUsers(newUsers);
-      setName('');
-      setAge('');
-      setAddress('');
+      try {
+        const response = await fetch('http://192.168.1.108:3000/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, age, address }),
+        });
+  
+        if (response.ok) {
+          const newUser = await response.json();
+          setUsers([...users, newUser]);
+          setName('');
+          setAge('');
+          setAddress('');
+        }
+      } catch (error) {
+        console.error('Erro ao cadastrar usuário:', error);
+      }
     }
   };
+  
 
-  const handleDelete = (id) => {
-    const filteredUsers = users.filter(user => user.id !== id);
-    setUsers(filteredUsers);
-    saveUsers(filteredUsers);
-  };
+  // const handleDelete = (id) => {
+  //   const filteredUsers = users.filter(user => user.id !== id);
+  //   setUsers(filteredUsers);
+  //   saveUsers(filteredUsers);
+  // };
 
-  const handleEdit = (user) => {
-    setEditingUser(user);
-    setModalVisible(true);
+  const handleDelete = async (id) => {
+    try {
+      const response = await fetch(`http://192.168.1.108:3000/users/${id}`, {
+        method: 'DELETE',
+      });
+  
+      if (response.ok) {
+        setUsers(users.filter((user) => user.id !== id));
+      }
+    } catch (error) {
+      console.error('Erro ao excluir usuário:', error);
+    }
   };
+  
+
+  // const handleEdit = (user) => {
+  //   setEditingUser(user);
+  //   setModalVisible(true);
+  // };
+
+  const handleEdit = async () => {
+    if (editingUser && (name || age || address)) {
+      try {
+        const response = await fetch(`http://192.168.1.108:3000/users/${editingUser.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, age, address }),
+        });
+  
+        if (response.ok) {
+          const updatedUser = await response.json();
+          setUsers(users.map((user) => (user.id === updatedUser.id ? updatedUser : user)));
+          setEditingUser(null);
+          setName('');
+          setAge('');
+          setAddress('');
+        }
+      } catch (error) {
+        console.error('Erro ao editar usuário:', error);
+      }
+    }
+    setModalVisible(false);
+  };
+  
 
   const handleSaveEdit = () => {
     if (editingUser && (name || age || address)) {
@@ -93,7 +170,7 @@ export default function App() {
         />
         <TextInput
           style={css.login__input}
-          placeholder="Endereço:"
+          placeholder="Email:"
           value={address}
           onChangeText={setAddress}
         />
