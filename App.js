@@ -13,20 +13,6 @@ export default function App() {
   const [editingUser, setEditingUser] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  // useEffect(() => {
-  //   const loadUsers = async () => {
-  //     try {
-  //       const savedUsers = await AsyncStorage.getItem('users');
-  //       if (savedUsers) {
-  //         setUsers(JSON.parse(savedUsers));
-  //       }
-  //     } catch (error) {
-  //       console.error('Erro ao carregar usuários:', error);
-  //     }
-  //   };
-  //   loadUsers();
-  // }, []);
-
   useEffect(() => {
     const loadUsers = async () => {
       try {
@@ -48,17 +34,6 @@ export default function App() {
       console.error('Erro ao salvar usuários:', error);
     }
   };
-
-  // const handleRegister = () => {
-  //   if (name && age && address) {
-  //     const newUsers = [...users, { id: Date.now(), name, age, address }];
-  //     setUsers(newUsers);
-  //     saveUsers(newUsers);
-  //     setName('');
-  //     setAge('');
-  //     setAddress('');
-  //   }
-  // };
 
   const handleRegister = async () => {
     if (name && age && address) {
@@ -83,12 +58,6 @@ export default function App() {
   };
   
 
-  // const handleDelete = (id) => {
-  //   const filteredUsers = users.filter(user => user.id !== id);
-  //   setUsers(filteredUsers);
-  //   saveUsers(filteredUsers);
-  // };
-
   const handleDelete = async (id) => {
     try {
       const response = await fetch(`http://192.168.1.108:3000/users/${id}`, {
@@ -103,14 +72,16 @@ export default function App() {
     }
   };
   
-
-  // const handleEdit = (user) => {
-  //   setEditingUser(user);
-  //   setModalVisible(true);
-  // };
-
-  const handleEdit = async () => {
-    if (editingUser && (name || age || address)) {
+  const handleEdit = (user) => {
+    setEditingUser(user); // Define o usuário que será editado
+    setName(user.name); // Preenche os campos do formulário com os valores atuais do usuário
+    setAge(user.age.toString());
+    setAddress(user.address);
+    setModalVisible(true); // Abre o modal
+  };
+  
+  const handleSaveEdit = async () => {
+    if (editingUser) {
       try {
         const response = await fetch(`http://192.168.1.108:3000/users/${editingUser.id}`, {
           method: 'PUT',
@@ -120,34 +91,19 @@ export default function App() {
   
         if (response.ok) {
           const updatedUser = await response.json();
-          setUsers(users.map((user) => (user.id === updatedUser.id ? updatedUser : user)));
+          setUsers(users.map((user) => (user.id === updatedUser.id ? updatedUser : user))); // Atualiza o estado local
           setEditingUser(null);
           setName('');
           setAge('');
           setAddress('');
+          setModalVisible(false); // Fecha o modal
         }
       } catch (error) {
         console.error('Erro ao editar usuário:', error);
       }
     }
-    setModalVisible(false);
   };
   
-
-  const handleSaveEdit = () => {
-    if (editingUser && (name || age || address)) {
-      const updatedUsers = users.map(user =>
-        user.id === editingUser.id ? { ...user, name, age, address } : user
-      );
-      setUsers(updatedUsers);
-      saveUsers(updatedUsers);
-      setEditingUser(null);
-      setName('');
-      setAge('');
-      setAddress('');
-    }
-    setModalVisible(false);
-  };
 
   return (
     <KeyboardAvoidingView
@@ -206,48 +162,48 @@ export default function App() {
 
       {/* Modal de Edição */}
       <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={css.modalContainer}>
-          <View style={css.modalContent}>
-            <Text style={css.modalTitle}>Editar Usuário</Text>
-            <TextInput
-              style={css.login__input}
-              placeholder="Nome:"
-              value={editingUser ? editingUser.name : ''}
-              onChangeText={(text) => setEditingUser({ ...editingUser, name: text })}
-            />
-            <TextInput
-              style={css.login__input}
-              placeholder="Idade:"
-              value={editingUser ? editingUser.age : ''}
-              onChangeText={(text) => setEditingUser({ ...editingUser, age: text })}
-              keyboardType="numeric"
-            />
-            <TextInput
-              style={css.login__input}
-              placeholder="Endereço:"
-              value={editingUser ? editingUser.address : ''}
-              onChangeText={(text) => setEditingUser({ ...editingUser, address: text })}
-            />
-            <TouchableOpacity
-              style={css.login__button}
-              onPress={handleSaveEdit}
-            >
-              <Text style={css.login__buttonText}>Salvar Alterações</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setModalVisible(false)}
-              style={css.cancelButton}
-            >
-              <Text style={css.cancelButtonText}>Cancelar</Text>
-            </TouchableOpacity>
-          </View>
+      animationType="slide"
+      transparent={true}
+      visible={modalVisible}
+      onRequestClose={() => setModalVisible(false)}
+    >
+      <View style={css.modalContainer}>
+        <View style={css.modalContent}>
+          <Text style={css.modalTitle}>Editar Usuário</Text>
+          <TextInput
+            style={css.login__input}
+            placeholder="Nome:"
+            value={name} // Usa o estado local
+            onChangeText={setName}
+          />
+          <TextInput
+            style={css.login__input}
+            placeholder="Idade:"
+            value={age} // Usa o estado local
+            onChangeText={setAge}
+            keyboardType="numeric"
+          />
+          <TextInput
+            style={css.login__input}
+            placeholder="Endereço:"
+            value={address} // Usa o estado local
+            onChangeText={setAddress}
+          />
+          <TouchableOpacity
+            style={css.login__button}
+            onPress={handleSaveEdit}
+          >
+            <Text style={css.login__buttonText}>Salvar Alterações</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setModalVisible(false)}
+            style={css.cancelButton}
+          >
+            <Text style={css.cancelButtonText}>Cancelar</Text>
+          </TouchableOpacity>
         </View>
-      </Modal>
+      </View>
+    </Modal>
     </KeyboardAvoidingView>
   );
 }
